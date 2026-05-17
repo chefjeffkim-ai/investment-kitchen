@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fed Pivot & Wealth Strategy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+/* 1. THE SETUP */
+* { box-sizing: border-box; }
+body {
+  background-color: #e2e8f0;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+  padding: 20px 0;
+  place-items: center;
+  margin: 0;
+}
+
+.slide-container {
+  align-items: center;
+  background-color: #fff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  font-family: "DM Sans", sans-serif;
+  height: 720px;
+  justify-content: center;
+  overflow: hidden;
+  padding: 60px;
+  position: relative;
+  width: 1280px;
+}
+
+.slide-container::before {
+  content: '';
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(0, 80, 136, 0.03) 0%, transparent 40%);
+}
+
+.slide-container > * { position: relative; z-index: 1; }
+
+/* 2. TYPOGRAPHY */
+.slide-container h1 {
+  color: #005088;
+  font-family: "Merriweather", serif;
+  font-weight: 700;
+  font-size: 80px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.slide-container .slide-title {
+  font-size: 40px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 40px;
+  text-align: left;
+  width: 100%;
+  border-bottom: 3px solid #11caa0;
+  padding-bottom: 10px;
+}
+
+.slide-container h3 { font-size: 32px; color: #005088; margin-bottom: 15px; }
+.slide-container p, .slide-container li { font-size: 18px; line-height: 1.6; color: #475569; }
+
+/* 3. LAYOUT DEFINITIONS */
+.content-area { display: flex; flex-direction: column; flex-grow: 1; justify-content: center; width: 100%; }
+
+.two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; width: 100%; align-items: start; }
+
+.tiled-content { display: flex; gap: 30px; width: 100%; }
+.tile { 
+  background-color: #f8fafc; 
+  border-radius: 16px; 
+  border: 1px solid #e2e8f0; 
+  flex: 1; 
+  padding: 30px; 
+  text-align: center; 
+}
+.tile .icon { color: #11caa0; font-size: 48px; margin-bottom: 20px; }
+
+.image-wrapper { border-radius: 12px; height: 350px; overflow: hidden; width: 100%; border: 1px solid #005088; }
+.image-wrapper img { height: 100%; width: 100%; object-fit: cover; }
+
+/* Table Layout */
+.table-layout { width: 100%; border-collapse: collapse; }
+.table-layout th { background-color: #005088; color: #fff; padding: 15px; text-align: left; }
+.table-layout td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
+
+/* Doughnut Chart */
+.doughnut-chart-container { display: flex; align-items: center; justify-content: center; gap: 60px; }
+.doughnut-chart { 
+  width: 350px; height: 350px; border-radius: 50%; 
+  background: conic-gradient(#005088 0% 40%, #11caa0 40% 70%, #f3f0df 70% 90%, #64748b 90% 100%);
+}
+.legend { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; }
+.legend li { display: flex; align-items: center; }
+.color-box { width: 20px; height: 20px; margin-right: 15px; border-radius: 4px; }
+
+/* Timeline */
+.timeline-layout { display: flex; justify-content: space-between; position: relative; width: 100%; margin-top: 50px; }
+.timeline-line { background: #e2e8f0; height: 4px; position: absolute; top: 20px; width: 100%; z-index: 0; }
+.timeline-item { position: relative; text-align: center; width: 22%; z-index: 1; }
+.timeline-dot { background: #11caa0; border-radius: 50%; height: 20px; width: 20px; margin: 0 auto 20px; border: 4px solid #fff; }
+
+/* Bar Chart */
+.bar-chart { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+.bar-row { display: flex; align-items: center; gap: 20px; }
+.bar-label { width: 150px; text-align: right; font-weight: 700; }
+.bar-container { flex-grow: 1; background: #f1f5f9; border-radius: 8px; height: 40px; overflow: hidden; }
+.bar-fill { height: 100%; background: #005088; display: flex; align-items: center; padding-left: 15px; color: #fff; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="slide-container" id="slide1" style="background-color: #005088;">
+    <div style="text-align: center;">
+        <h1 style="color: #f3f0df;">Investment Kitchen</h1>
+        <p style="color: #11caa0; font-size: 32px; margin-top: 20px;">The Fed Pivot & Strategic Wealth Building</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide2">
+    <div style="text-align: center;">
+        <div style="height: 5px; width: 100px; background: #11caa0; margin: 0 auto 30px;"></div>
+        <h1>The Philosophy of the "Seed"</h1>
+        <p style="font-size: 24px; margin-top: 20px;">왜 1주라는 작은 시작이 거대한 자산이 되는가</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide3">
+    <h2 class="slide-title">복리의 마법: 시간이라는 효소</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div class="tiled-content" style="flex-direction: column;">
+                <div class="tile" style="text-align: left;">
+                    <i class="fa-solid fa-seedling icon"></i>
+                    <h3>The Seed Principle</h3>
+                    <p>1주는 돈을 불리는 도구가 아니라, 복리의 기계에 들어가는 '입장권'입니다. 수량보다 중요한 것은 '언제 시작했는가'입니다.</p>
+                </div>
+                <div class="tile" style="text-align: left;">
+                    <i class="fa-solid fa-clock icon"></i>
+                    <h3>Time is the Secret Sauce</h3>
+                    <p>자산은 선형적으로 늘지 않고 지수 함수적으로 폭발합니다. 초기 1주가 10년 뒤 100주의 가치를 창출하는 원리입니다.</p>
+                </div>
+            </div>
+            <div class="image-wrapper">
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/2232479972165240784" alt="Compounding growth chart">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide4">
+    <h2 class="slide-title">적립식 투자(DCA): 주방의 정기 배송 시스템</h2>
+    <div class="content-area">
+        <table class="table-layout">
+            <thead>
+                <tr>
+                    <th>투자 방식</th>
+                    <th>심리적 영향</th>
+                    <th>시장 대응력</th>
+                    <th>장기 수익률</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>일시불 매수 (Lump-sum)</td>
+                    <td>고점 공포 (매우 높음)</td>
+                    <td>변동성에 취약</td>
+                    <td>타이밍에 의존</td>
+                </tr>
+                <tr>
+                    <td><strong>정기 적립 (DCA)</strong></td>
+                    <td><strong>심리적 안정 (낮음)</strong></td>
+                    <td><strong>하락장 = 바겐세일</strong></td>
+                    <td><strong>평균 단가 인하 효과</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin-top: 30px; font-style: italic;">"시장의 파도를 타는 가장 안전한 방법은 매달 정해진 날에 '재료'를 사는 것입니다."</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide5" style="background-color: #f3f0df;">
+    <div style="text-align: center;">
+        <h1 style="color: #005088;">The Kevin Warsh Era</h1>
+        <p style="color: #475569; font-size: 24px; margin-top: 20px;">쿠팡 사외이사에서 세계 경제의 사령탑으로</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide6">
+    <h2 class="slide-title">케빈 워시: 시장 친화적 실무가</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div class="image-wrapper">
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/14073800567093256248" alt="Federal Reserve Building">
+            </div>
+            <div>
+                <h3>Key Profiles</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 20px;"><i class="fa-solid fa-check-circle" style="color:#11caa0;"></i> <strong>Coupang Background:</strong> 이커머스와 물류, 기술 혁신에 대한 깊은 이해도 보유.</li>
+                    <li style="margin-bottom: 20px;"><i class="fa-solid fa-check-circle" style="color:#11caa0;"></i> <strong>Market Friendly:</strong> 디지털 자산(코인) 및 시장 혁신에 유연한 태도 기대.</li>
+                    <li style="margin-bottom: 20px;"><i class="fa-solid fa-check-circle" style="color:#11caa0;"></i> <strong>Independence:</strong> 트럼프의 금리 인하 압박과 연준의 독립성 사이의 줄타기.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide7">
+    <h2 class="slide-title">2026 전략적 자산 배분 (Warsh Era)</h2>
+    <div class="content-area">
+        <div class="doughnut-chart-container">
+            <div class="doughnut-chart"></div>
+            <ul class="legend">
+                <li><div class="color-box" style="background-color: #005088;"></div>미국 빅테크 & AI (40%)</li>
+                <li><div class="color-box" style="background-color: #11caa0;"></div>한국 수출 대장주 (30%)</li>
+                <li><div class="color-box" style="background-color: #f3f0df; border:1px solid #ccc;"></div>디지털 자산/비트코인 (20%)</li>
+                <li><div class="color-box" style="background-color: #64748b;"></div>에너지/방산 (10%)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide8">
+    <div style="text-align: center;">
+        <h1 style="color: #005088;">South Korea's Response</h1>
+        <p style="font-size: 24px; margin-top: 20px;">환율 폭풍 속에서 '진짜 재료'를 찾는 법</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide9">
+    <h2 class="slide-title">KOSPI & 환율: 변동성을 기회로</h2>
+    <div class="content-area">
+        <div class="two-column" style="align-items: center;">
+            <div class="image-wrapper">
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/17621737587651673042" alt="KOSPI trading floor">
+            </div>
+            <div>
+                <h3>The "Gray Rhino" Factor</h3>
+                <p>워시 취임 초기, 한-미 금리 역전차로 인해 원/달러 환율이 1,500원선을 위협할 수 있습니다. 이는 한국 증시에 단기 충격(Chaos)을 주겠지만, 수출 대기업들에게는 역대급 실적의 기회가 됩니다.</p>
+                <p><strong>주목 섹터:</strong> 반도체(삼성/하이닉스), 방산(한화), 조선(한화오션).</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide10">
+    <h2 class="slide-title">2026 연준 전환 로드맵</h2>
+    <div class="content-area">
+        <div class="timeline-layout">
+            <div class="timeline-line"></div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>5월 15일</h3>
+                <p>제롬 파월 퇴임 및 케빈 워시 취임</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>6월 16일</h3>
+                <p>워시 체제 첫 FOMC 회의 (금리 방향성)</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>Q3 2026</h3>
+                <p>한-미 통화 스왑 및 외환 시장 안정화</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>Q4 2026</h3>
+                <p>글로벌 유동성 공급 재개 (KOSPI 릴리)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide11">
+    <h2 class="slide-title">리스크 관리: 타지 않는 요리를 위하여</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div class="image-wrapper">
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/15488685628198931590" alt="Gold and Stocks">
+            </div>
+            <div>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 25px;"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right: 15px;"></i> <strong>부채 관리:</strong> 금리 변동성이 크므로 대출을 통한 '풀매수'는 절대 금물입니다.</li>
+                    <li style="margin-bottom: 25px;"><i class="fa-solid fa-coins" style="color:#facc15; margin-right: 15px;"></i> <strong>현금 비중:</strong> 환율 급등 시 매수 기회를 잡기 위해 15~20%의 현금을 보유하세요.</li>
+                    <li style="margin-bottom: 25px;"><i class="fa-solid fa-earth-americas" style="color:#3b82f6; margin-right: 15px;"></i> <strong>자산 분산:</strong> 한국 주식에만 몰빵하지 말고, 달러 자산(미국 주식)을 섞어 환율 헷지를 하세요.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide12" style="background-image: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('http://googleusercontent.com/image_collection/image_retrieval/4519005209661214023'); background-size: cover;">
+    <div style="text-align: center;">
+        <h1 style="font-size: 100px;">Questions?</h1>
+        <p style="font-size: 28px; margin-top: 30px;">"투자는 주방의 조리와 같습니다. 시장의 온도에 맞춰 불을 조절하세요."</p>
+        <div style="margin-top: 50px; color: #64748b; font-family: 'DM Sans';">
+            chef@investment-kitchen.com | www.investment-kitchen.app
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
