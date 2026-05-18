@@ -107,7 +107,8 @@ with st.sidebar:
             "🧾 My Portfolio (내 장바구니)",
             "🔬 Lab (과거 줍줍 성적표)",
             "🍰 Dessert (초장기 투자 및 비교)",
-            "🍽️ A la carte (내 맘대로 뷔페)"
+            "🍽️ A la carte (내 맘대로 뷔페)",
+            "🤖 AI 수석 셰프 (Gemini 상담)"
         ]
     )
 
@@ -268,8 +269,9 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                 prev_close = df['Open'].iloc[0]
                 change_pct = ((current_price - prev_close) / prev_close) * 100
 
-                # 줍줍 목표가는 최근 한 달 최저가 기준 설정
+                # 줍줍 목표가 (1달 최저가) 및 익절 목표가 (1달 최고가)
                 target_buy_price = df_daily['Low'].min()
+                target_sell_price = df_daily['High'].max()
 
                 is_korean = ticker_symbol.endswith('.KS') or ticker_symbol.endswith('.KQ')
                 is_index = ticker_symbol.startswith('^')
@@ -277,25 +279,32 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                 if is_index:
                     display_price = f"{current_price:,.2f}"
                     sub_price = ""
-                    target_str = f"{target_buy_price:,.2f} 포인트 부근"
+                    target_str = f"{target_buy_price:,.2f} 포인트"
+                    target_sell_str = f"{target_sell_price:,.2f} 포인트"
                 elif is_korean:
                     price_krw = current_price
                     price_usd = current_price / usd_krw_rate
                     target_krw = target_buy_price
                     target_usd = target_buy_price / usd_krw_rate
+                    sell_krw = target_sell_price
+                    sell_usd = target_sell_price / usd_krw_rate
                     
                     display_price = f"₩{price_krw:,.0f}"
                     sub_price = f"(약 ${price_usd:,.2f})"
-                    target_str = f"₩{target_krw:,.0f} 부근 (약 ${target_usd:,.2f})"
+                    target_str = f"₩{target_krw:,.0f}"
+                    target_sell_str = f"₩{sell_krw:,.0f}"
                 else:
                     price_usd = current_price
                     price_krw = current_price * usd_krw_rate
                     target_usd = target_buy_price
                     target_krw = target_buy_price * usd_krw_rate
+                    sell_usd = target_sell_price
+                    sell_krw = target_sell_price * usd_krw_rate
                     
                     display_price = f"${price_usd:,.2f}"
                     sub_price = f"(약 ₩{price_krw:,.0f})"
-                    target_str = f"${target_usd:,.2f} 부근 (약 ₩{target_krw:,.0f})"
+                    target_str = f"${target_usd:,.2f}"
+                    target_sell_str = f"${sell_usd:,.2f}"
 
                 # RSI 계산 및 시그널 출력
                 df_daily['RSI'] = calculate_rsi(df_daily['Close'])
@@ -307,7 +316,7 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                     ai_signal = "⏳ 온도를 측정 중입니다..."
                     ai_color = "#2D3436"
                 elif current_rsi < 30:
-                    ai_signal = f"🛒 줍줍 타이밍! (목표가: {target_str})"
+                    ai_signal = f"🛒 줍줍 타이밍! (목표가: {target_str} 부근)"
                     ai_color = "#E74C3C" 
                     
                     # [핵심] 주방 타이머 (실시간 알림 및 사운드)
@@ -323,7 +332,7 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                         st.session_state.overheated_stocks.remove(ticker_name)
                         
                 elif current_rsi > 70:
-                    ai_signal = "🛑 앗, 너무 뜨거워요! (과열 구간)"
+                    ai_signal = f"🔥 프라이팬이 타고 있습니다! 절반 덜어내세요(익절)! (매도 목표가: {target_sell_str} 부근)"
                     ai_color = "#3498DB" 
                     
                     if 'overheated_stocks' not in st.session_state:
@@ -336,7 +345,7 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                     if 'alerted_stocks' in st.session_state and ticker_name in st.session_state.alerted_stocks:
                         st.session_state.alerted_stocks.remove(ticker_name)
                 else:
-                    ai_signal = f"👀 지켜보기 (줍줍 목표가: {target_str})"
+                    ai_signal = f"👀 지켜보기 (줍줍 목표가: {target_str} 부근)"
                     ai_color = "#27AE60" 
                     
                     # 중립 구간이므로 양쪽 알람 모두 초기화
@@ -658,20 +667,25 @@ def render_portfolio_page(usd_krw_rate):
     if "portfolio_df" not in st.session_state:
         if os.path.exists(DB_FILE):
             st.session_state.portfolio_df = pd.read_csv(DB_FILE)
+            # 하위 호환성: 기존 데이터에 목표수익률 컬럼이 없으면 10.0으로 초기화
+            if "목표수익률" not in st.session_state.portfolio_df.columns:
+                st.session_state.portfolio_df["목표수익률"] = 10.0
         else:
-            st.session_state.portfolio_df = pd.DataFrame(columns=["종목명", "기호", "매수단가", "수량"])
+            st.session_state.portfolio_df = pd.DataFrame(columns=["종목명", "기호", "매수단가", "수량", "목표수익률"])
         
     with st.form("portfolio_form"):
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             selected_ticker = st.selectbox("종목 선택", options=list(ALL_STOCKS.keys()))
         with col2:
             buy_price = st.number_input("매수 단가 (원화/달러)", min_value=0.0, step=1.0)
         with col3:
             quantity = st.number_input("수량", min_value=0.0, step=1.0)
+        with col4:
+            target_profit = st.number_input("목표 온도(익절 수익률 %)", min_value=1.0, value=10.0, step=1.0)
             
         if st.form_submit_button("장바구니 추가"):
-            new_row = {"종목명": selected_ticker, "기호": ALL_STOCKS[selected_ticker], "매수단가": buy_price, "수량": quantity}
+            new_row = {"종목명": selected_ticker, "기호": ALL_STOCKS[selected_ticker], "매수단가": buy_price, "수량": quantity, "목표수익률": target_profit}
             st.session_state.portfolio_df = pd.concat([st.session_state.portfolio_df, pd.DataFrame([new_row])], ignore_index=True)
             st.session_state.portfolio_df.to_csv(DB_FILE, index=False) # 데이터 영구 저장
             st.success(f"{selected_ticker} 추가 완료!")
@@ -683,7 +697,7 @@ def render_portfolio_page(usd_krw_rate):
             st.markdown("### 🛒 현재 내 장바구니 현황")
         with col_right:
             if st.button("🗑️ 장바구니 비우기"):
-                st.session_state.portfolio_df = pd.DataFrame(columns=["종목명", "기호", "매수단가", "수량"])
+                st.session_state.portfolio_df = pd.DataFrame(columns=["종목명", "기호", "매수단가", "수량", "목표수익률"])
                 if os.path.exists(DB_FILE):
                     os.remove(DB_FILE)
                 st.rerun()
@@ -708,7 +722,24 @@ def render_portfolio_page(usd_krw_rate):
                 total_current_krw += cur_krw
                 
                 profit_pct = ((curr_price - row["매수단가"]) / row["매수단가"]) * 100 if row["매수단가"] > 0 else 0
-                st.write(f"- **{row['종목명']}**: 실시간 수익률 **{profit_pct:+.2f}%** (현재가: {curr_price:,.2f})")
+                target_profit = row.get("목표수익률", 10.0)
+                
+                # 목표 달성 알람 로직
+                if profit_pct >= target_profit:
+                    status_text = f"🎉 띵-! 요리 완성! (목표 {target_profit}% 달성, 지금 익절하세요!)"
+                    
+                    if 'profit_alerts' not in st.session_state:
+                        st.session_state.profit_alerts = set()
+                    if row['종목명'] not in st.session_state.profit_alerts:
+                        st.toast(f"🍽️ '{row['종목명']}' 요리가 완성되었습니다! 맛있게 드세요(익절)!", icon="🎉")
+                        st.session_state.profit_alerts.add(row['종목명'])
+                else:
+                    status_text = f"🔥 요리 중... (목표까지 {target_profit - profit_pct:.2f}% 남음)"
+                    
+                    if 'profit_alerts' in st.session_state and row['종목명'] in st.session_state.profit_alerts:
+                        st.session_state.profit_alerts.remove(row['종목명'])
+                        
+                st.write(f"- **{row['종목명']}**: 실시간 수익률 **{profit_pct:+.2f}%** (현재가: {curr_price:,.2f}) ➔ {status_text}")
                 
         if total_investment_krw > 0:
             total_profit_pct = ((total_current_krw - total_investment_krw) / total_investment_krw) * 100
@@ -849,6 +880,9 @@ def show_live_dashboard():
     elif course == "🍽️ A la carte (내 맘대로 뷔페)":
         st.subheader("🍽️ 뷔페 (자유 선택)")
         
+    elif course == "🤖 AI 수석 셰프 (Gemini 상담)":
+        render_gemini_chef()
+        
         with st.expander("👨‍🍳 셰프의 강력 추천: 쿠팡 전 사외이사 연준 의장 취임에 대비한 '바벨 전략'", expanded=True):
             st.info("새로운 연준 의장의 정책 방향이 아직 불확실할 때는, 양 극단의 시나리오(매파/비둘기파)를 모두 방어할 수 있는 '바벨 전략(Barbell Strategy)'이 최고입니다. 아래 세 종목은 어떤 정책이 나와도 계좌에 초록불을 켜줄 핵심 재료입니다.")
             
@@ -882,6 +916,55 @@ def show_live_dashboard():
         
         selected = st.multiselect("종목 자유 선택", options=list(ALL_STOCKS.keys()), default=valid_defaults)
         render_stock_grid(selected, ALL_STOCKS, usd_krw_rate)
+
+# [핵심] AI 수석 셰프 (Gemini) 렌더링 함수
+def render_gemini_chef():
+    st.markdown("## 🤖 AI 수석 셰프 (Google Gemini)")
+    st.info("시장에 대해 궁금한 점이나 요리법(투자 조언)을 수석 셰프에게 직접 물어보세요! (5살도 이해하는 요리 비유로 설명해 줍니다)")
+    
+    # API 키 입력
+    api_key = st.text_input("🔑 Google Gemini API 키를 입력해주세요 (보안을 위해 서버에 저장되지 않습니다)", type="password")
+    
+    if not api_key:
+        st.warning("API 키를 입력하셔야 셰프와 대화할 수 있습니다. (구글 AI Studio에서 무료로 발급 가능)")
+        st.markdown("[👉 무료 API 키 발급받기 (Google AI Studio)](https://aistudio.google.com/app/apikey)")
+        return
+        
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        
+        # 모델 설정
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        if "gemini_messages" not in st.session_state:
+            st.session_state.gemini_messages = [
+                {"role": "assistant", "content": "어서 오세요! 저는 Investment Kitchen의 수석 셰프입니다. 👨‍🍳 오늘 어떤 주식 재료에 대해 상담해 드릴까요?"}
+            ]
+            
+        for msg in st.session_state.gemini_messages:
+            with st.chat_message(msg["role"], avatar="👨‍🍳" if msg["role"] == "assistant" else "🧑‍💼"):
+                st.markdown(msg["content"])
+                
+        if prompt := st.chat_input("예: 엔비디아가 너무 뜨거운데 지금 익절(접시에 덜어내기) 할까요?"):
+            st.session_state.gemini_messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user", avatar="🧑‍💼"):
+                st.markdown(prompt)
+                
+            with st.chat_message("assistant", avatar="👨‍🍳"):
+                message_placeholder = st.empty()
+                message_placeholder.markdown("셰프가 레시피를 고민 중입니다... 🍳")
+                try:
+                    system_prompt = "당신은 'Investment Kitchen'이라는 주식 투자 레스토랑의 AI 수석 셰프입니다. 주식 시장의 복잡한 이야기를 5살도 이해할 수 있는 요리 비유(온도, 재료, 레시피, 굽기, 신선도 등)를 사용하여 친절하고 전문적으로 답변해주세요. 사용자 질문: "
+                    response = model.generate_content(system_prompt + prompt)
+                    full_response = response.text
+                    message_placeholder.markdown(full_response)
+                    st.session_state.gemini_messages.append({"role": "assistant", "content": full_response})
+                except Exception as e:
+                    message_placeholder.error(f"앗! 요리 중 에러가 발생했습니다: {str(e)}")
+                    
+    except ImportError:
+        st.error("google-generativeai 라이브러리가 설치되지 않았습니다. 터미널에서 pip install google-generativeai 를 실행해주세요.")
 
 # 대시보드 렌더링
 show_live_dashboard()
