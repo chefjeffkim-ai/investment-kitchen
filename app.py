@@ -992,7 +992,7 @@ def render_secret_room(usd_krw_rate):
         st.balloons()
         
             # pyrefly: ignore [parse-error]
-            "버라이즌 (통신 배당)": "VZ",
+    "버라이즌 (통신 배당)": "VZ",
             "코카콜라 (필수 소비재)": "KO",
             "엔비디아 (AI 대장주)": "NVDA",
             "엔브리지 (에너지 인프라)": "ENB",
