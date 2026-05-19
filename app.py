@@ -6,6 +6,7 @@ import pandas as pd
 import time
 import os
 import base64
+import streamlit.components.v1 as components
 
 # 1. 셰프의 시력 보호 세팅
 st.set_page_config(page_title="Investment Kitchen v3.0", layout="wide")
@@ -108,7 +109,9 @@ with st.sidebar:
             "🔬 Lab (과거 줍줍 성적표)",
             "🍰 Dessert (초장기 투자 및 비교)",
             "🍽️ A la carte (내 맘대로 뷔페)",
-            "🤖 AI 수석 셰프 (Gemini 상담)"
+            "🤖 AI 수석 셰프 (Gemini 상담)",
+            "🔒 VVIP Secret Room (오너 전용)",
+            "🏪 레스토랑 2호점 (실시간 라이브 펍)"
         ]
     )
 
@@ -252,14 +255,14 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
         st.warning("지켜볼 주식 재료를 최소 1개 이상 선택해 주세요! 👨‍🍳")
         return
 
-    cols = st.columns(2)
+    cols = st.columns(3)
     for idx, ticker_name in enumerate(selected_names):
         ticker_symbol = stock_dict[ticker_name]
         
         # 캐싱된 함수 호출로 API 부하 방지
         df, df_daily = fetch_stock_data_cached(ticker_symbol)
         
-        with cols[idx % 2]:
+        with cols[idx % 3]:
             with st.container(border=True):
                 if df.empty or df_daily.empty:
                     st.warning(f"앗! '{ticker_name}' 데이터를 기다리는 중입니다...")
@@ -316,7 +319,7 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                     ai_signal = "⏳ 온도를 측정 중입니다..."
                     ai_color = "#2D3436"
                 elif current_rsi < 30:
-                    ai_signal = f"🛒 줍줍 타이밍! (목표가: {target_str} 부근)"
+                    ai_signal = f"🛒 줍줍 타이밍! (목표: {target_str})"
                     ai_color = "#E74C3C" 
                     
                     # [핵심] 주방 타이머 (실시간 알림 및 사운드)
@@ -331,38 +334,43 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                     if 'overheated_stocks' in st.session_state and ticker_name in st.session_state.overheated_stocks:
                         st.session_state.overheated_stocks.remove(ticker_name)
                         
-                elif current_rsi > 70:
-                    ai_signal = f"🔥 프라이팬이 타고 있습니다! 절반 덜어내세요(익절)! (매도 목표가: {target_sell_str} 부근)"
-                    ai_color = "#3498DB" 
-                    
-                    if 'overheated_stocks' not in st.session_state:
-                        st.session_state.overheated_stocks = set()
-                    if ticker_name not in st.session_state.overheated_stocks:
-                        autoplay_audio("assets/sizzle.mp3") # 지글지글!
-                        st.session_state.overheated_stocks.add(ticker_name)
-                    
-                    # 바겐세일 초기화
-                    if 'alerted_stocks' in st.session_state and ticker_name in st.session_state.alerted_stocks:
-                        st.session_state.alerted_stocks.remove(ticker_name)
                 else:
-                    ai_signal = f"👀 지켜보기 (줍줍 목표가: {target_str} 부근)"
-                    ai_color = "#27AE60" 
+                    # RSI 과열 기준 (기본 70, 아난티 등 특정 종목은 60)
+                    overheat_threshold = 60 if "아난티" in ticker_name else 70
                     
-                    # 중립 구간이므로 양쪽 알람 모두 초기화
-                    if 'alerted_stocks' in st.session_state and ticker_name in st.session_state.alerted_stocks:
-                        st.session_state.alerted_stocks.remove(ticker_name)
-                    if 'overheated_stocks' in st.session_state and ticker_name in st.session_state.overheated_stocks:
-                        st.session_state.overheated_stocks.remove(ticker_name)
+                    if current_rsi > overheat_threshold:
+                        ai_signal = f"🔥 과열! 절반 익절 권장 (목표: {target_sell_str})"
+                        ai_color = "#3498DB" 
+                        
+                        if 'overheated_stocks' not in st.session_state:
+                            st.session_state.overheated_stocks = set()
+                        if ticker_name not in st.session_state.overheated_stocks:
+                            st.toast(f"🔥 '{display_name}' 온도가 {overheat_threshold}도를 넘었습니다! 익절 타이밍입니다!", icon="🚨")
+                            autoplay_audio("assets/sizzle.mp3") # 지글지글!
+                            st.session_state.overheated_stocks.add(ticker_name)
+                        
+                        # 바겐세일 초기화
+                        if 'alerted_stocks' in st.session_state and ticker_name in st.session_state.alerted_stocks:
+                            st.session_state.alerted_stocks.remove(ticker_name)
+                    else:
+                        ai_signal = f"👀 지켜보기 (줍줍 목표: {target_str})"
+                        ai_color = "#27AE60" 
+                        
+                        # 중립 구간이므로 양쪽 알람 모두 초기화
+                        if 'alerted_stocks' in st.session_state and ticker_name in st.session_state.alerted_stocks:
+                            st.session_state.alerted_stocks.remove(ticker_name)
+                        if 'overheated_stocks' in st.session_state and ticker_name in st.session_state.overheated_stocks:
+                            st.session_state.overheated_stocks.remove(ticker_name)
 
                 price_color = '#27AE60' if change_pct > 0 else '#E74C3C'
                 
-                st.markdown(f"<h3 style='margin: 0;'>{display_name}</h3>", unsafe_allow_html=True)
-                st.markdown(f"<h2 style='margin: 0;'>{display_price} <span style='font-size: 16px; color: gray;'>{sub_price}</span> <span style='font-size: 20px; color: {price_color};'>({change_pct:+.2f}%)</span></h2>", unsafe_allow_html=True)
+                # 1줄: 종목명 + 현재가 + 등락률 (초압축)
+                st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px;'><h4 style='margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{display_name}</h4><h4 style='margin: 0; color:{price_color};'>{display_price} <span style='font-size:14px'>({change_pct:+.1f}%)</span></h4></div>", unsafe_allow_html=True)
                 
+                # 2줄: AI 시그널 + RSI (배경 박스 압축)
                 st.markdown(f"""
-                <div style="background-color: {ai_color}15; border-left: 5px solid {ai_color}; padding: 10px; border-radius: 5px; margin: 15px 0;">
-                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: {ai_color};">🤖 {ai_signal}</p>
-                    <p style="margin: 0; font-size: 12px; color: gray;">현재 시장 온도(RSI): {current_rsi:.1f}/100</p>
+                <div style="background-color: {ai_color}10; border-left: 4px solid {ai_color}; padding: 5px 8px; border-radius: 4px; margin-bottom: 5px;">
+                    <p style="margin: 0; font-size: 13px; font-weight: bold; color: {ai_color};">🤖 {ai_signal} <span style="font-weight:normal; color:gray; font-size:11px;">(RSI: {current_rsi:.1f})</span></p>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -375,11 +383,11 @@ def render_stock_grid(selected_names, stock_dict, usd_krw_rate):
                     increasing_line_color='#27AE60', decreasing_line_color='#E74C3C'
                 )])
                 
-                # [버그수정] x/yaxis font 지우고 tickfont나 자동 테마가 적용되도록 클린화
+                # 차트 높이 대폭 축소
                 fig.update_layout(
                     xaxis_rangeslider_visible=False,
-                    margin=dict(l=0, r=0, t=10, b=0),
-                    height=250,
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    height=140,
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                 )
@@ -883,6 +891,12 @@ def show_live_dashboard():
     elif course == "🤖 AI 수석 셰프 (Gemini 상담)":
         render_gemini_chef()
         
+    elif course == "🔒 VVIP Secret Room (오너 전용)":
+        render_secret_room(usd_krw_rate)
+        
+    elif course == "🏪 레스토랑 2호점 (실시간 라이브 펍)":
+        render_branch_2()
+        
         with st.expander("👨‍🍳 셰프의 강력 추천: 쿠팡 전 사외이사 연준 의장 취임에 대비한 '바벨 전략'", expanded=True):
             st.info("새로운 연준 의장의 정책 방향이 아직 불확실할 때는, 양 극단의 시나리오(매파/비둘기파)를 모두 방어할 수 있는 '바벨 전략(Barbell Strategy)'이 최고입니다. 아래 세 종목은 어떤 정책이 나와도 계좌에 초록불을 켜줄 핵심 재료입니다.")
             
@@ -965,6 +979,93 @@ def render_gemini_chef():
                     
     except ImportError:
         st.error("google-generativeai 라이브러리가 설치되지 않았습니다. 터미널에서 pip install google-generativeai 를 실행해주세요.")
+
+# [비밀 메뉴] 오너 전용 VVIP 방 렌더링 함수
+def render_secret_room(usd_krw_rate):
+    st.markdown("## 🔒 VVIP Secret Room")
+    st.warning("이곳은 레스토랑 오너(셰프님)만을 위한 비밀 프라이빗 룸입니다. 외부인 출입 금지!")
+    
+    password = st.text_input("🔑 오너 전용 비밀번호를 입력하세요:", type="password")
+    
+    if password == "8548":
+        st.success("✅ 인증 성공! 오너님의 VIP 포트폴리오를 불러옵니다.")
+        st.balloons()
+        
+            # pyrefly: ignore [parse-error]
+            "버라이즌 (통신 배당)": "VZ",
+            "코카콜라 (필수 소비재)": "KO",
+            "엔비디아 (AI 대장주)": "NVDA",
+            "엔브리지 (에너지 인프라)": "ENB",
+            "존슨앤드존슨 (헬스케어)": "JNJ",
+            "맥도날드 (소비재/부동산)": "MCD",
+            "아난티 (리조트/레저)": "025980.KQ"
+        }
+        
+        st.markdown("### 💎 오너님의 VVIP 냉장고 현황")
+        render_stock_grid(list(secret_stocks.keys()), secret_stocks, usd_krw_rate)
+        
+    elif password != "":
+        st.error("❌ 비밀번호가 틀렸습니다. (침입자 경고!)")
+
+# [2호점] 실시간 라이브 펍 렌더링 함수
+def render_branch_2():
+    st.markdown("## 🏪 레스토랑 2호점: 실시간 라이브 펍")
+    st.info("이곳은 1초 단위로 가격이 번쩍거리는 '실시간 라이브 전광판' 공간입니다! 본점(1호점)의 10초 딜레이조차 없는 월스트리트 직통 뷰입니다.")
+    
+    st.markdown("### 🏃‍♂️ 월스트리트 실시간 전광판")
+    ticker_tape_html = """
+    <!-- TradingView Widget BEGIN -->
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+      {
+      "symbols": [
+        {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"},
+        {"proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100"},
+        {"description": "NVIDIA", "proName": "NASDAQ:NVDA"},
+        {"description": "Tesla", "proName": "NASDAQ:TSLA"},
+        {"description": "Apple", "proName": "NASDAQ:AAPL"},
+        {"description": "코스피", "proName": "KRX:KOSPI"}
+      ],
+      "showSymbolLogo": true,
+      "colorTheme": "light",
+      "isTransparent": true,
+      "displayMode": "adaptive",
+      "locale": "kr"
+    }
+      </script>
+    </div>
+    <!-- TradingView Widget END -->
+    """
+    components.html(ticker_tape_html, height=80)
+    
+    st.markdown("### 📈 오리지널 라이브 차트 (원하는 주식을 돋보기로 검색해 보세요!)")
+    advanced_chart_html = """
+    <!-- TradingView Widget BEGIN -->
+    <div class="tradingview-widget-container">
+      <div id="tradingview_12345"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+      <script type="text/javascript">
+      new TradingView.widget(
+      {
+      "width": "100%",
+      "height": 600,
+      "symbol": "NASDAQ:NVDA",
+      "interval": "D",
+      "timezone": "Asia/Seoul",
+      "theme": "light",
+      "style": "1",
+      "locale": "kr",
+      "enable_publishing": false,
+      "allow_symbol_change": true,
+      "container_id": "tradingview_12345"
+    }
+      );
+      </script>
+    </div>
+    <!-- TradingView Widget END -->
+    """
+    components.html(advanced_chart_html, height=650)
 
 # 대시보드 렌더링
 show_live_dashboard()
